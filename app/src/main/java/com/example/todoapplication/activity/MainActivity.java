@@ -1,15 +1,19 @@
-package com.example.todoapplication;
+package com.example.todoapplication.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.example.todoapplication.R;
 import com.example.todoapplication.adapter.TodoAdapter;
 import com.example.todoapplication.model.ApiClient;
 import com.example.todoapplication.model.Todo;
@@ -35,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     RealmResults<Todo> todos;
     List<Todo> todosNullParent;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
         listView = (ListView) findViewById(R.id.listView);
         progressBar=findViewById(R.id.ProgressBar);
         ApiClient apiClient = new ApiClient();
-        retrofit = apiClient.getRetrofit("http://4f38-185-114-120-49.ngrok.io/");
+        retrofit = apiClient.getRetrofit("http://a4ed-185-114-120-49.ngrok.io/");
         Realm.init(MainActivity.this);
         RealmConfiguration realmConfig = new RealmConfiguration.Builder()
                 .name("todo.realm")
@@ -65,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
             TodoAdapter todoAdapter = new TodoAdapter(getBaseContext(), todosNullParent);
             listView.setAdapter(todoAdapter);
         } else {
-            //Realm.deleteRealm(realmConfig);
+            Realm.deleteRealm(realmConfig);
             loadJson();
         }
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -81,8 +86,25 @@ public class MainActivity extends AppCompatActivity {
                 TodoAdapter todoAdapter = new TodoAdapter(getBaseContext(), chosenTodos);
                 listView.setAdapter(todoAdapter);
                 Toast.makeText(MainActivity.this, String.valueOf(chosenTodos.size()), Toast.LENGTH_SHORT).show();
+//                Intent intent = getIntent();
+//                Uri deeplink = intent.getData();
+//                imageButton.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View view) {
+//                        Intent intent = new Intent(MainActivity.this,MainActivity2.class);
+//                        startActivity(intent);
+//                        finish();
+//                    }
+//                });
+
+
+//                // Parse the deeplink and take the adequate action
+//                if (deeplink != null) {
+//                    parseDeepLink(deeplink);
+//                }
             }
         });
+
 
     }
 
@@ -128,5 +150,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         realm.close();
+    }
+    private void parseDeepLink(Uri deeplink) {
+        // The path of the deep link, e.g. '/products/123?coupon=save90'
+        String path = deeplink.getPath();
+
+        if (path.startsWith("/Todo")) {
+            // Handles a product deep link
+            Intent intent = new Intent(this, MainActivity2.class);
+            intent.putExtra("id", deeplink.getLastPathSegment()); // 123
+            intent.putExtra("coupon", deeplink.getQueryParameter("coupon")); // save90
+            startActivity(intent);
+        }
     }
 }

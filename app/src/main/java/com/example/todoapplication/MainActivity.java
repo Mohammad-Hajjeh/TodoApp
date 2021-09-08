@@ -2,13 +2,12 @@ package com.example.todoapplication;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.todoapplication.adapter.TodoAdapter;
@@ -18,8 +17,6 @@ import com.example.todoapplication.service.TodoService;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
-import io.realm.RealmList;
-import io.realm.RealmObject;
 import io.realm.RealmResults;
 import retrofit2.Retrofit;
 
@@ -36,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     ProgressBar progressBar;
     private Realm realm;
     RealmResults<Todo> todos;
+    List<Todo> todosNullParent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,26 +42,48 @@ public class MainActivity extends AppCompatActivity {
         listView = (ListView) findViewById(R.id.listView);
         progressBar=findViewById(R.id.ProgressBar);
         ApiClient apiClient = new ApiClient();
-        retrofit = apiClient.getRetrofit("http://61cf-185-114-120-49.ngrok.io/");
+        retrofit = apiClient.getRetrofit("http://4f38-185-114-120-49.ngrok.io/");
         Realm.init(MainActivity.this);
         RealmConfiguration realmConfig = new RealmConfiguration.Builder()
-                .name("todos.realm")
+                .name("todo.realm")
                 .schemaVersion(1)
                 .deleteRealmIfMigrationNeeded()
                 .build();
         Realm.setDefaultConfiguration(realmConfig);
-        Realm.deleteRealm(realmConfig);
+//        Realm.deleteRealm(realmConfig);
         realm = Realm.getDefaultInstance();
         todos = realm.where(Todo.class).findAll();
+        todosNullParent=new ArrayList<>();
         if (todos != null && !todos.isEmpty()) {
             Log.d("REalm", "REalmCall");
             progressBar.setVisibility(View.INVISIBLE);
-            TodoAdapter todoAdapter = new TodoAdapter(getBaseContext(), todos);
+            for(int i=0;i<todos.size();i++){
+                if(todos.get(i).getParent_id()==-1){
+                    todosNullParent.add(todos.get(i));
+                }
+            }
+            TodoAdapter todoAdapter = new TodoAdapter(getBaseContext(), todosNullParent);
             listView.setAdapter(todoAdapter);
         } else {
             //Realm.deleteRealm(realmConfig);
             loadJson();
         }
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                List<Todo> chosenTodos = new ArrayList<>();
+                Todo todo = (Todo) adapterView.getItemAtPosition(position);
+                for (int i = 0; i < todos.size(); i++) {
+                    if(todos.get(i).getParent_id()==todo.getId()){
+                        chosenTodos.add(todos.get(i));
+                    }
+                }
+                TodoAdapter todoAdapter = new TodoAdapter(getBaseContext(), chosenTodos);
+                listView.setAdapter(todoAdapter);
+                Toast.makeText(MainActivity.this, String.valueOf(chosenTodos.size()), Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 
     void loadJson() {
@@ -81,10 +101,9 @@ public class MainActivity extends AppCompatActivity {
                     parentNullList.add(todoList.get(i));
                 }
             }
-            listView = (ListView) findViewById(R.id.listView);
             TodoAdapter todoAdapter = new TodoAdapter(this, parentNullList);
             realm.beginTransaction();
-            realm.copyToRealm(parentNullList);
+            realm.copyToRealm(todoList);
             realm.commitTransaction();
             listView.setAdapter(todoAdapter);
             progressBar.setVisibility(View.INVISIBLE);

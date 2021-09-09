@@ -7,15 +7,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.todoapplication.R;
-import com.example.todoapplication.activity.MainActivity;
-import com.example.todoapplication.activity.MainActivity2;
+import com.example.todoapplication.view.activity.MainActivity2;
 import com.example.todoapplication.model.Todo;
 
 import java.util.List;

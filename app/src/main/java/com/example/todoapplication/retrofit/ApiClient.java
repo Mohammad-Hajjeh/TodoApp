@@ -1,4 +1,4 @@
-package com.example.todoapplication.model;
+package com.example.todoapplication.retrofit;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

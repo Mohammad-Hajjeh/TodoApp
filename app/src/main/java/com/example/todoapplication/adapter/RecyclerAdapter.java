@@ -9,11 +9,10 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.todoapplication.R;
-import com.example.todoapplication.activity.MainActivity2;
+import com.example.todoapplication.view.activity.MainActivity2;
 import com.example.todoapplication.model.Todo;
 
 import java.util.List;

@@ -1,6 +1,8 @@
-package com.example.todoapplication.activity;
+package com.example.todoapplication.view.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModelProviders;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -8,16 +10,16 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.todoapplication.R;
 import com.example.todoapplication.adapter.TodoAdapter;
-import com.example.todoapplication.model.ApiClient;
+import com.example.todoapplication.retrofit.ApiClient;
 import com.example.todoapplication.model.Todo;
-import com.example.todoapplication.service.TodoService;
+import com.example.todoapplication.retrofit.ApiRequest;
+import com.example.todoapplication.view_model.TodoViewModel;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -38,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private Realm realm;
     RealmResults<Todo> todos;
     List<Todo> todosNullParent;
+    TodoViewModel todoViewModel;
 
 
     @Override
@@ -46,8 +49,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         listView = (ListView) findViewById(R.id.listView);
         progressBar=findViewById(R.id.ProgressBar);
-        ApiClient apiClient = new ApiClient();
-        retrofit = apiClient.getRetrofit("http://a4ed-185-114-120-49.ngrok.io/");
+        todoViewModel= ViewModelProviders.of(this).get(TodoViewModel.class);
         Realm.init(MainActivity.this);
         RealmConfiguration realmConfig = new RealmConfiguration.Builder()
                 .name("todo.realm")
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
                 .deleteRealmIfMigrationNeeded()
                 .build();
         Realm.setDefaultConfiguration(realmConfig);
-//        Realm.deleteRealm(realmConfig);
+       //Realm.deleteRealm(realmConfig);
         realm = Realm.getDefaultInstance();
         todos = realm.where(Todo.class).findAll();
         todosNullParent=new ArrayList<>();
@@ -70,8 +72,8 @@ public class MainActivity extends AppCompatActivity {
             TodoAdapter todoAdapter = new TodoAdapter(getBaseContext(), todosNullParent);
             listView.setAdapter(todoAdapter);
         } else {
-            Realm.deleteRealm(realmConfig);
-            loadJson();
+           // Realm.deleteRealm(realmConfig);
+            getTodos();
         }
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -86,33 +88,22 @@ public class MainActivity extends AppCompatActivity {
                 TodoAdapter todoAdapter = new TodoAdapter(getBaseContext(), chosenTodos);
                 listView.setAdapter(todoAdapter);
                 Toast.makeText(MainActivity.this, String.valueOf(chosenTodos.size()), Toast.LENGTH_SHORT).show();
-//                Intent intent = getIntent();
-//                Uri deeplink = intent.getData();
-//                imageButton.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View view) {
-//                        Intent intent = new Intent(MainActivity.this,MainActivity2.class);
-//                        startActivity(intent);
-//                        finish();
-//                    }
-//                });
 
-
-//                // Parse the deeplink and take the adequate action
-//                if (deeplink != null) {
-//                    parseDeepLink(deeplink);
-//                }
             }
         });
 
 
     }
 
-    void loadJson() {
-        progressBar.setVisibility(View.VISIBLE);
-        TodoService todoService = retrofit.create(TodoService.class);
-        Observable<List<Todo>> todoObservable = todoService.getTodos();
-        todoObservable.subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(this::handleResults, this::handleError);
+    void getTodos(){
+        LiveData<Observable<List<Todo>>> todoObservable = todoViewModel.getTodoLiveData();
+            if(todoObservable!=null){
+                progressBar.setVisibility(View.VISIBLE);
+               todoObservable.getValue().subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(this::handleResults, this::handleError);
+
+            }
+
+
     }
 
     private void handleResults(List<Todo> todoList) {
@@ -151,16 +142,5 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         realm.close();
     }
-    private void parseDeepLink(Uri deeplink) {
-        // The path of the deep link, e.g. '/products/123?coupon=save90'
-        String path = deeplink.getPath();
 
-        if (path.startsWith("/Todo")) {
-            // Handles a product deep link
-            Intent intent = new Intent(this, MainActivity2.class);
-            intent.putExtra("id", deeplink.getLastPathSegment()); // 123
-            intent.putExtra("coupon", deeplink.getQueryParameter("coupon")); // save90
-            startActivity(intent);
-        }
-    }
 }

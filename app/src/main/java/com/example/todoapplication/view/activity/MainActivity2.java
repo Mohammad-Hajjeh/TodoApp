@@ -1,4 +1,4 @@
-package com.example.todoapplication.activity;
+package com.example.todoapplication.view.activity;
 
 import androidx.appcompat.app.AppCompatActivity;
 

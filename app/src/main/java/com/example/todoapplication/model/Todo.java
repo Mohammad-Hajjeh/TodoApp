@@ -1,5 +1,6 @@
 package com.example.todoapplication.model;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import io.realm.Realm;
@@ -9,12 +10,16 @@ import io.realm.annotations.PrimaryKey;
 public class Todo extends RealmObject {
 //    @PrimaryKey
     @SerializedName("id")
+    @Expose
     private int id;
     @SerializedName("name")
+    @Expose
     private String name;
     @SerializedName("description")
+    @Expose
     private String description;
     @SerializedName("parent_id")
+    @Expose
     private int parent_id;
 
     public Todo(int id, String name, String description, int parent_id) {
